@@ -1,6 +1,6 @@
 # Project TODO
 
-- [ ] Inspect the supplied Base44 reference experience and capture useful visual direction
+- [x] Inspect the supplied Base44 reference experience and capture useful visual direction
 - [x] Establish GitVerse dark design tokens, typography, spacing, shadows, and responsive breakpoints
 - [x] Implement persistent responsive sidebar with logo, section headers, navigation, and authenticated profile card
 - [x] Implement top header search, notification bell, and XP badge
@@ -24,7 +24,7 @@
 - [x] Save the final checkpoint and deliver the GitVerse project
 
 - [x] Add distinct Google and email authentication UI entry points and wire them to the auth flow
-- [ ] Replace hardcoded hero metrics and stat-card counts with authenticated dashboard data
-- [ ] Replace initialRepos/activity mock arrays with real repository/activity sources
+- [x] Replace hardcoded hero metrics and stat-card counts with authenticated dashboard data
+- [x] Replace initialRepos/activity mock arrays with real repository/activity sources
 - [x] Persist pin state and alert toggles in monitored-repository preferences via backend procedures
-- [ ] Compute Today’s Activity feed and commit-streak visualization from actual repository events
+- [x] Compute Today’s Activity feed and commit-streak visualization from actual repository events

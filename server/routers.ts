@@ -6,7 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { createHeartbeatJob } from "./_core/heartbeat";
 import { listMonitoredRepos, saveMonitorPreferences, setScheduleTaskUid } from "./db";
-import { searchPublicRepositories, getRepositorySnapshot, normalizeRepoRef } from "./github";
+import { searchPublicRepositories, getRepositorySnapshot, getGitVerseDashboard, normalizeRepoRef } from "./github";
 
 export const appRouter = router({
   system: systemRouter,
@@ -16,6 +16,14 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+  }),
+  dashboard: router({
+    snapshot: publicProcedure.query(() => getGitVerseDashboard()),
+    userSnapshot: protectedProcedure.query(async ({ ctx }) => {
+      const monitored = await listMonitoredRepos(ctx.user.id);
+      const refs = monitored.map(row => row.monitor.repoRef);
+      return getGitVerseDashboard(refs.length ? refs : undefined);
     }),
   }),
   github: router({
