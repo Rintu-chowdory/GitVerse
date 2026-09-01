@@ -33,3 +33,7 @@
 - [x] Check preview routes, API responses, 404s, browser console, and server logs
 - [x] Fix any publish blockers discovered during validation
 - [x] Save a publish-ready checkpoint and report validation findings
+
+- [ ] Push the checkpointed GitVerse project to a private GitHub repository using GitHub CLI
+- [ ] Verify the GitHub remote, repository visibility, and pushed commit
+- [ ] Report the push result and advise PAT rotation
