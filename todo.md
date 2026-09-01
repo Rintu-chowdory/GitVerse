@@ -28,3 +28,8 @@
 - [x] Replace initialRepos/activity mock arrays with real repository/activity sources
 - [x] Persist pin state and alert toggles in monitored-repository preferences via backend procedures
 - [x] Compute Today’s Activity feed and commit-streak visualization from actual repository events
+
+- [x] Run production build and full test validation
+- [x] Check preview routes, API responses, 404s, browser console, and server logs
+- [x] Fix any publish blockers discovered during validation
+- [x] Save a publish-ready checkpoint and report validation findings
