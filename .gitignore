@@ -115,3 +115,5 @@ client/public/__manus__/version.json
 
 # generated Vercel serverless entry
 api/index.js
+.vercel
+.env*

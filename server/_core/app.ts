@@ -8,7 +8,7 @@ import { createContext } from "./context";
 import { registerOAuthRoutes } from "./oauth";
 import { checkGithubRepositories } from "../scheduled";
 import { registerStorageProxy } from "./storageProxy";
-import { serveStatic, setupVite } from "./vite";
+import { serveStatic } from "./static";
 
 /**
  * Build the Express app (routes + middleware) without opening a port.
@@ -39,7 +39,20 @@ export async function createApp(): Promise<{ app: Express; server: Server }> {
   app.post("/api/scheduled/check-github", checkGithubRepositories);
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
+    // Hidden dynamic import: `new Function` defeats static analysis, so
+    // bundlers/serverless tracers (esbuild, Vercel nft) never follow this
+    // into the Vite dev server and its optional native dependencies
+    // (lightningcss, esbuild binaries) — those break serverless runtimes.
+    // Resolved at runtime relative to this module.
+    // Under tsx (dev) the module is vite.ts; compiled/bundled output is vite.js.
+    const viteModuleBase = import.meta.url.replace(/\/[^/]*$/, "/vite");
+    const dynamicImport = new Function("m", "return import(m);") as (
+      m: string
+    ) => Promise<typeof import("./vite")>;
+    const viteModule = await dynamicImport(viteModuleBase + ".js").catch(() =>
+      dynamicImport(viteModuleBase + ".ts")
+    );
+    await viteModule.setupVite(app, server);
   } else {
     serveStatic(app);
   }
