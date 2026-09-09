@@ -1,5 +1,8 @@
 export const ENV = {
-  appId: process.env.VITE_APP_ID ?? "",
+  // Falls back to a static id when unset: this self-hosted deployment has no
+  // Manus platform to assign one, but session tokens still require a
+  // non-empty appId field (see sdk.ts SessionPayload) for GitHub-based auth.
+  appId: process.env.VITE_APP_ID || "gitverse",
   cookieSecret: process.env.JWT_SECRET ?? "",
   databaseUrl: process.env.DATABASE_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",

@@ -289,7 +289,27 @@ class SDKServer {
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
-    // If user not in DB, sync from OAuth server automatically
+    // Self-hosted GitHub sessions never had a Manus OAuth server to sync
+    // from — the session JWT already carries everything we know about the
+    // user (githubAuth.ts persisted it to the DB when configured). If the
+    // DB lookup came back empty (e.g. DATABASE_URL not set, so persistence
+    // is a no-op) fall back to a lightweight in-memory user built straight
+    // from the verified session instead of calling the legacy OAuth server.
+    if (!user && sessionUserId.startsWith("github:")) {
+      await db.upsertUser({
+        openId: sessionUserId,
+        name: session.name || null,
+        loginMethod: "github",
+        lastSignedIn: signedInAt,
+      });
+      user = await db.getUserByOpenId(sessionUserId);
+      if (!user) {
+        user = buildFallbackUser(sessionUserId, session.name);
+      }
+      return user;
+    }
+
+    // Legacy path: sync from the Manus OAuth server automatically.
     if (!user) {
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionToken ?? "");
@@ -321,6 +341,33 @@ class SDKServer {
 }
 
 const CRON_OPEN_ID_PREFIX = "cron_";
+
+/**
+ * Lightweight stand-in for a DB-backed User row, used only when no
+ * DATABASE_URL is configured so GitHub sign-in still works end to end
+ * (dashboards/monitoring features that need persistence simply stay empty
+ * until a real database is connected).
+ */
+function buildFallbackUser(openId: string, name: string): AuthenticatedUser {
+  const now = new Date();
+  // Stable positive int derived from openId so repeated requests in the same
+  // process are consistent (not persisted across cold starts).
+  let hash = 0;
+  for (let i = 0; i < openId.length; i++) {
+    hash = (hash * 31 + openId.charCodeAt(i)) >>> 0;
+  }
+  return {
+    id: hash || 1,
+    openId,
+    name: name || null,
+    email: null,
+    loginMethod: "github",
+    role: "user",
+    createdAt: now,
+    updatedAt: now,
+    lastSignedIn: now,
+  } as AuthenticatedUser;
+}
 
 /** Result of `sdk.authenticateRequest`. Cron callbacks set `isCron=true` and `taskUid`; see `/home/ubuntu/skills/webdev-periodic-updates/SKILL.md`. */
 export type AuthenticatedUser = User & {
