@@ -3,15 +3,26 @@ const GITHUB_API = "https://api.github.com";
 type GithubRequestInit = RequestInit & { headers?: Record<string, string> };
 
 async function githubFetch<T>(path: string, init: GithubRequestInit = {}): Promise<T> {
-  const response = await fetch(`${GITHUB_API}${path}`, {
-    ...init,
-    headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
-      ...(init.headers ?? {}),
-    },
-  });
+  const token = process.env.GITHUB_TOKEN;
+  const doFetch = (withToken: boolean) =>
+    fetch(`${GITHUB_API}${path}`, {
+      ...init,
+      headers: {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "GitVerse",
+        ...(withToken && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init.headers ?? {}),
+      },
+    });
+
+  let response = await doFetch(Boolean(token));
+  // A stale/invalid GITHUB_TOKEN must not take the whole dashboard down:
+  // 401 means GitHub rejected the token itself, so retry anonymously.
+  if (response.status === 401 && token) {
+    console.warn("[GitHub] Token rejected (401) — retrying without authorization.");
+    response = await doFetch(false);
+  }
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${response.statusText}`);
   return response.json() as Promise<T>;
 }

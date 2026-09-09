@@ -170,15 +170,9 @@ export default defineConfig({
   },
   server: {
     host: true,
-    allowedHosts: [
-      ".manuspre.computer",
-      ".manus.computer",
-      ".manus-asia.computer",
-      ".manuscomputer.ai",
-      ".manusvm.computer",
-      "localhost",
-      "127.0.0.1",
-    ],
+    // true = allow any host so the dev server works on localhost, LAN IPs,
+    // and preview/proxy hosts outside the original platform.
+    allowedHosts: true,
     fs: {
       strict: true,
       deny: ["**/.*"],
