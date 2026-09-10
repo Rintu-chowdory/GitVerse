@@ -7,8 +7,14 @@ let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
-    try { _db = drizzle(process.env.DATABASE_URL); }
-    catch (error) { console.warn("[Database] Failed to connect:", error); _db = null; }
+    try {
+      // TLS is required by TiDB Cloud Serverless (and standard for any
+      // remote MySQL); encrypted without server-cert pinning so it works
+      // across providers.
+      _db = drizzle({
+        connection: { uri: process.env.DATABASE_URL, ssl: { minVersion: "TLSv1.2" } },
+      });
+    } catch (error) { console.warn("[Database] Failed to connect:", error); _db = null; }
   }
   return _db;
 }
