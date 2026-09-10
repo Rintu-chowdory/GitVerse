@@ -1,0 +1,20 @@
+name: GitVerse scheduled checks
+
+on:
+  schedule:
+    # Every 15 minutes (GitHub Actions may delay by a few minutes at times).
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  check-monitored-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger GitVerse monitoring checks
+        run: |
+          response=$(curl -sS -f -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITVERSE_CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "https://gitverse-zeta.vercel.app/api/cron/check-monitored")
+          echo "GitVerse response: $response"

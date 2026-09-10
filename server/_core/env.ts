@@ -13,4 +13,5 @@ export const ENV = {
   githubToken: process.env.GITHUB_TOKEN ?? "",
   githubClientId: process.env.GITHUB_CLIENT_ID ?? "",
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
+  cronSecret: process.env.CRON_SECRET ?? "",
 };

@@ -7,6 +7,8 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { registerOAuthRoutes } from "./oauth";
 import { checkGithubRepositories } from "../scheduled";
+import { registerScheduledRoutes } from "../scheduledSelfHosted";
+import { registerSetupRoutes } from "../setupDatabase";
 import { registerStorageProxy } from "./storageProxy";
 import { serveStatic } from "./static";
 
@@ -37,6 +39,9 @@ export async function createApp(): Promise<{ app: Express; server: Server }> {
     })
   );
   app.post("/api/scheduled/check-github", checkGithubRepositories);
+  // Self-hosted scheduled checks + one-time DB bootstrap (cron-secret protected)
+  registerScheduledRoutes(app);
+  registerSetupRoutes(app);
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     // Hidden dynamic import: `new Function` defeats static analysis, so

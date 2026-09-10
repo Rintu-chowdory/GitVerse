@@ -54,6 +54,21 @@ export async function setScheduleTaskUid(userId: number, repoRef: string, taskUi
   return taskUid;
 }
 
+export async function listAllMonitoredRepos() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(monitoredRepos);
+}
+
+/** Clears the "new since last visit" badges once the user has viewed them. */
+export async function resetUnseenCounters(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(monitoredRepos)
+    .set({ unseenCommits: 0, unseenIssues: 0, unseenReleases: 0 })
+    .where(eq(monitoredRepos.userId, userId));
+}
+
 export async function saveMonitorPreferences(userId: number, repoRef: string, patch: Partial<{ isPinned: boolean; alertNewCommits: boolean; alertNewIssues: boolean; alertNewReleases: boolean }>) {
   const db = await getDb();
   if (!db) return null;

@@ -76,6 +76,14 @@ export const monitoredRepos = mysqlTable("monitored_repos", {
   scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
   lastCheckedAt: timestamp("lastCheckedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  // Self-hosted scheduled-check state: baselines from the last run plus
+  // "unseen" counters surfaced in the UI until the user views them.
+  lastCommitSha: varchar("lastCommitSha", { length: 40 }),
+  lastReleaseTag: varchar("lastReleaseTag", { length: 120 }),
+  lastOpenIssues: int("lastOpenIssues"),
+  unseenCommits: int("unseenCommits").default(0).notNull(),
+  unseenIssues: int("unseenIssues").default(0).notNull(),
+  unseenReleases: int("unseenReleases").default(0).notNull(),
 }, table => ({ userRepoIdx: index("monitored_user_repo_idx").on(table.userId, table.repoRef) }));
 
 export type User = typeof users.$inferSelect;

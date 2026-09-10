@@ -5,7 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { createHeartbeatJob } from "./_core/heartbeat";
-import { listMonitoredRepos, saveMonitorPreferences, setScheduleTaskUid } from "./db";
+import { listMonitoredRepos, resetUnseenCounters, saveMonitorPreferences, setScheduleTaskUid } from "./db";
 import { searchPublicRepositories, getRepositorySnapshot, getGitVerseDashboard, normalizeRepoRef } from "./github";
 
 export const appRouter = router({
@@ -31,7 +31,13 @@ export const appRouter = router({
     repository: publicProcedure.input(z.object({ repoRef: z.string().regex(/^[\w.-]+\/[\w.-]+$/) })).query(({ input }) => getRepositorySnapshot(normalizeRepoRef(input.repoRef))),
   }),
   monitoring: router({
-    list: protectedProcedure.query(({ ctx }) => listMonitoredRepos(ctx.user.id)),
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const rows = await listMonitoredRepos(ctx.user.id);
+      // Fetch-then-clear: this load sees the new-activity badges, the next
+      // one doesn't (they've been "seen").
+      resetUnseenCounters(ctx.user.id).catch(() => {});
+      return rows;
+    }),
     update: protectedProcedure.input(z.object({ repoRef: z.string().regex(/^[\w.-]+\/[\w.-]+$/), isPinned: z.boolean().optional(), alertNewCommits: z.boolean().optional(), alertNewIssues: z.boolean().optional(), alertNewReleases: z.boolean().optional() })).mutation(({ ctx, input }) => {
       const { repoRef, ...patch } = input;
       return saveMonitorPreferences(ctx.user.id, repoRef, patch);
